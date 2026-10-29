@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <base href="https://cdn.jsdelivr.net/gh/selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/retrobowl/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Retro Bowl</title>
+  <link rel="icon" type="image/x-icon" href="retrobowl.ico">
+  <style>
+    :root { --game-accent: #c7f36a; --game-toolbar: #12151c; --game-line: rgba(255,255,255,.2); }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #000; }
+    body { color: #eee; font-family: system-ui, sans-serif; }
+    #game-shell { width: 100vw; height: 100vh; display: flex; flex-direction: column; background: #000; }
+    .game-toolbar { height: 52px; flex: 0 0 52px; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 16px; background: var(--game-toolbar); color: #fff; border-bottom: 1px solid var(--game-line); }
+    .game-toolbar strong { color: var(--game-accent); font: 700 12px Consolas, monospace; letter-spacing: .08em; text-transform: uppercase; }
+    .game-toolbar button { border: 1px solid var(--game-line); border-radius: 999px; padding: 8px 13px; background: transparent; color: #fff; font: 600 12px system-ui, sans-serif; cursor: pointer; }
+    .game-toolbar button:hover { background: rgba(255,255,255,.12); }
+    body[data-theme="apple"] .game-toolbar { --game-toolbar: rgba(17,21,32,.9); --game-line: rgba(255,255,255,.2); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+    body[data-theme="android"] .game-toolbar { --game-toolbar: #1b1a20; }
+    body[data-theme="android"] .game-toolbar button { border-radius: 13px; }
+    #gm4html5_div_id { width: 100vw; height: calc(100vh - 52px); flex: 1 1 auto; min-height: 0; display: grid; place-items: center; }
+    #canvas { width: min(100vw, 177.78vh); height: min(calc(100vh - 52px), 56.25vw); image-rendering: pixelated; touch-action: none; display: block; }
+    #game-shell:fullscreen #gm4html5_div_id { height: 100vh; }
+    #game-shell:fullscreen #canvas { height: min(100vh, 56.25vw); }
+    #fullscreen-status { position: fixed; left: 12px; bottom: 10px; color: #ffd1c7; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div id="game-shell">
+    <header class="game-toolbar">
+      <button type="button" onclick="returnToArcade()">← Little Arcade</button>
+      <strong>Retro Bowl</strong>
+      <button id="fullscreen-button" type="button" onclick="toggleFullscreen()">Fullscreen ⛶</button>
+    </header>
+    <div id="gm4html5_div_id" class="gm4html5_div_class">
+      <img src="html5game/splash.png" id="GM4HTML5_loadingscreen" alt="" style="display:none">
+      <canvas id="canvas" width="960" height="540"><p>Your browser does not support HTML5 canvas.</p></canvas>
+    </div>
+  </div>
+  <div id="fullscreen-status" role="status" aria-live="polite"></div>
+  <script src="html5game/RetroBowl.js?WAEAC=1633155445"></script>
+  <script>
+    try {
+      const savedTheme = localStorage.getItem('littleArcadeTheme');
+      const themeDefaults = { dark: '#c7f36a', apple: '#a8c7ff', android: '#d0bcff' };
+      const theme = Object.hasOwn(themeDefaults, savedTheme) ? savedTheme : 'dark';
+      const savedAccent = localStorage.getItem('littleArcadeAccent');
+      const accent = /^#[0-9a-f]{6}$/i.test(savedAccent || '') ? savedAccent : themeDefaults[theme];
+      document.body.dataset.theme = theme;
+      document.body.style.setProperty('--game-accent', accent);
+    } catch (error) { /* The game stays playable if local preferences are unavailable. */ }
+    window.onload = GameMaker_Init;
+    function returnToArcade() {
+      if (history.length > 1) history.back();
+      else window.location.href = new URL('index.html', window.location.href).href;
+    }
+    async function toggleFullscreen() {
+      const shell = document.getElementById('game-shell');
+      const status = document.getElementById('fullscreen-status');
+      status.textContent = '';
+      try {
+        if (document.fullscreenElement) await document.exitFullscreen();
+        else if (shell.requestFullscreen) await shell.requestFullscreen();
+        else if (shell.webkitRequestFullscreen) shell.webkitRequestFullscreen();
+        else throw new Error('Fullscreen is not supported.');
+      } catch (error) {
+        status.textContent = 'Fullscreen could not start in this browser.';
+      }
+    }
+    document.addEventListener('fullscreenchange', () => {
+      const button = document.getElementById('fullscreen-button');
+      const active = document.fullscreenElement === document.getElementById('game-shell');
+      button.textContent = active ? 'Exit fullscreen' : 'Fullscreen ⛶';
+    });
+  </script>
+</body>
+</html>
